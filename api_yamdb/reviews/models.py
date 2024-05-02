@@ -53,7 +53,7 @@ class GenreTitle(models.Model):
 
 
 class Review(models.Model):
-    text = models.TextField('Текст отзыва')
+    text = models.TextField('Текст')
     author = models.IntegerField('Автор')  # models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
     score = models.PositiveSmallIntegerField(
         'Оценка',
@@ -63,7 +63,7 @@ class Review(models.Model):
         ),
     )
     pub_date = models.DateTimeField(
-        'Дата публикации отзыва', auto_now_add=True
+        'Дата публикации', auto_now_add=True
     )
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews'
