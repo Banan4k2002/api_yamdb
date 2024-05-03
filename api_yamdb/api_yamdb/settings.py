@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 from datetime import timedelta
 
@@ -24,11 +24,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
-    # 'drf_yasg',
-    # 'accounts',
     'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig',
-
+    'roles.apps.RolesConfig'
 ]
 
 MIDDLEWARE = [
@@ -103,6 +101,7 @@ USE_L10N = True
 
 USE_TZ = True
 
+AUTH_USER_MODEL = 'roles.User'
 
 # Static files (CSS, JavaScript, Images)
 
@@ -122,9 +121,18 @@ REST_FRAMEWORK = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(days=14),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_URLS_REGEX = r'^/api/.*$'
+
+MAIL_SUBJECT = 'Код регистрации'
+EMAIL_CONFIRM = 'yamdb.host@yandex.ru'
+
+EMAIL_HOST = 'somebody@yandex.ru'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'yamdb.host'
+EMAIL_HOST_PASSWORD = 'onetwo'
+EMAIL_USE_TLS = True

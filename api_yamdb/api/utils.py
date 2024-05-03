@@ -1,18 +1,23 @@
-from django.core.mail import EmailMessage
-import threading
+import random
 
-class EmailThread(threading.Thread):
+from django.conf import settings
+from django.core.mail import send_mail
+from django.shortcuts import get_object_or_404
+from reviews.models import User
 
-    def __init__(self, email):
-        self.email = email
-        threading.Thread.__init__(self)
 
-    def run(self):
-        self.email.send()
+def generate_confirmation_code(username):
+    user = get_object_or_404(User, username=username)
+    confirmation_code = ''.join(
+        random.choices(settings.CONF_GEN, k=15)
+    )
+    user.confirmation_code = confirmation_code
+    user.save()
 
-class Util:
-    @staticmethod
-    def send_email(data):
-        email = EmailMessage(
-            subject=data['email_subject'], body=data['email_body'], to=[data['to_email']])
-        EmailThread(email).start()
+    send_mail(
+        subject=settings.MAIL_SUBJECT,
+        message=confirmation_code,
+        from_email=settings.EMAIL_CONFIRM,
+        recipient_list=[user.email],
+        fail_silently=False,
+    )
