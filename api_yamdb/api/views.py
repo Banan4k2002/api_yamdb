@@ -3,7 +3,6 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -12,7 +11,7 @@ from .permissions import (AdminPermission)
 from .serializers import (
     RegistrationSerializer,
     TokenSerializer,
-    UserSerializer
+    UserSerializer,
 )
 
 
@@ -61,8 +60,12 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = "username"
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    pagination_class = PageNumberPagination
     permission_classes = (AdminPermission,)
+
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
 
     @action(
         methods=[
@@ -79,12 +82,25 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(
         methods=[
-            'post',
-            'get',
-            'patch',
             'delete',
         ],
         detail=False,
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def delete_user(self, request):
+        user = request.user
+        if request.method == "DELETE":
+            user.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        methods=[
+            'post',
+            'get',
+            'patch',
+        ],
+        detail=False,
+
         url_path="me",
         permission_classes=[permissions.IsAuthenticated],
     )
@@ -97,14 +113,12 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(
                 user,
                 data=request.data,
-                partial=True
+                partial=True,
             )
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            if 'role' not in request.data:
+                serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-        if request.method == "DELETE":
-            user.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
         if request.method == "POST":
             serializer = RegistrationSerializer(data=request.data)
@@ -113,3 +127,15 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        search_term = request.query_params.get('search')
+        if search_term:
+            queryset = queryset.filter(username__icontains=search_term)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({'results': serializer.data})
