@@ -62,9 +62,7 @@ class Review(models.Model):
             MaxValueValidator(10),
         ),
     )
-    pub_date = models.DateTimeField(
-        'Дата публикации', auto_now_add=True
-    )
+    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews'
     )
@@ -83,3 +81,19 @@ class Review(models.Model):
 
     def __str__(self):
         return f'{self.title.name} - {self.score}'
+
+
+class Comment(models.Model):
+    text = models.TextField('Текст')
+    author = models.IntegerField('Автор')  # models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
+    review = models.ForeignKey(
+        Review, on_delete=models.CASCADE, related_name='comments'
+    )
+
+    class Meta:
+        verbose_name = 'комментарий'
+        verbose_name_plural = 'Комментарии'
+
+    def __str__(self):
+        return self.text
