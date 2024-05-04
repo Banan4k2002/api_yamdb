@@ -3,7 +3,7 @@ import datetime as dt
 from django.shortcuts import get_object_or_404
 
 from rest_framework.serializers import ModelSerializer
-from rest_framework.serializers import CharField, ValidationError, StringRelatedField, SlugRelatedField
+from rest_framework.serializers import SlugRelatedField
 
 from reviews.models import Category, Genre, GenreTitle, Title
 
