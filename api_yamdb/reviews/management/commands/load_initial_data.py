@@ -4,7 +4,7 @@ import sqlite3
 
 from django.core.management.base import BaseCommand
 
-from reviews.models import Category, Genre, GenreTitle, Title
+from reviews.models import Category, Genre, GenreTitle, Title, Review
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -45,7 +45,15 @@ DATA_MAPPING = {
         'id': 'id',
         'title_id': 'title_id',
         'genre_id': 'genre_id'
-    }
+    },
+    # Review: {
+    #     'id': 'id',
+    #     'text':'text',
+    #     'title_id': 'title_id',
+    #     'author': 'author',
+    #     'score': 'score',
+    #     'pub_date': 'pub_date'
+    # },
 }
 
 

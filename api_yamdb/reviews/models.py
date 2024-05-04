@@ -1,4 +1,7 @@
+import datetime as dt
+
 from django.db import models
+from django.db.models import CheckConstraint
 
 from .constants import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
 
@@ -35,10 +38,21 @@ class Title(models.Model):
     genre = models.ManyToManyField(Genre, through='GenreTitle')
     description = models.TextField('Описание', null=True, blank=True)
 
-
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
+
+        constraints = [
+            CheckConstraint(
+                check=models.Q(year__lte=dt.date.today().year),
+                name='check_title_year'
+            )
+        ]
+
+    @property
+    def rating(self):
+        data = self.reviews.aggregate(models.Avg('score'))
+        return round(data.get('score__avg'))
 
     def __str__(self):
         return self.name
@@ -48,3 +62,4 @@ class GenreTitle(models.Model):
     title = models.ForeignKey(Title, on_delete=models.CASCADE,
                               related_name='genres')
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+
