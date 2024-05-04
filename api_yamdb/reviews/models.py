@@ -1,11 +1,11 @@
 from django.db import models
 
-from .constants import NAME_MAX_LENGTH
+from .constants import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
 
 
 class Category(models.Model):
     name = models.CharField('Название', max_length=NAME_MAX_LENGTH)
-    slug = models.SlugField('Слаг', unique=True)
+    slug = models.SlugField(unique=True, max_length=SLUG_MAX_LENGTH)
 
     class Meta:
         verbose_name = 'Категория'
@@ -17,7 +17,7 @@ class Category(models.Model):
 
 class Genre(models.Model):
     name = models.CharField('Название', max_length=NAME_MAX_LENGTH)
-    slug = models.SlugField(unique=True)
+    slug = models.SlugField(unique=True, max_length=SLUG_MAX_LENGTH)
 
     class Meta:
         verbose_name = 'Жанр'
@@ -34,6 +34,7 @@ class Title(models.Model):
                                  related_name='titles', null=True)
     genre = models.ManyToManyField(Genre, through='GenreTitle')
     description = models.TextField('Описание', null=True, blank=True)
+
 
     class Meta:
         verbose_name = 'Произведение'
