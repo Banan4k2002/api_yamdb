@@ -117,7 +117,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 100,
+    'PAGE_SIZE': 10,
 }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -129,9 +129,6 @@ SIMPLE_JWT = {
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_URLS_REGEX = r'^/api/.*$'
-
-MAIL_SUBJECT = 'Код регистрации'
-EMAIL_CONFIRM = 'yamdb.host@yandex.ru'
 
 EMAIL_HOST = 'somebody@yandex.ru'
 EMAIL_PORT = 587

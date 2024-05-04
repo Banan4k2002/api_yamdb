@@ -61,6 +61,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (AdminPermission,)
+    # pagination_class = PageNumberPagination
 
     def update(self, request, *args, **kwargs):
         if request.method == 'PUT':

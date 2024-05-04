@@ -5,6 +5,8 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from reviews.models import User
 
+from .constants import EMAIL_CONFIRM, EMAIL_SUBJECT
+
 
 def generate_confirmation_code(username):
     user = get_object_or_404(User, username=username)
@@ -15,9 +17,9 @@ def generate_confirmation_code(username):
     user.save()
 
     send_mail(
-        subject=settings.MAIL_SUBJECT,
+        subject=EMAIL_SUBJECT,
         message=confirmation_code,
-        from_email=settings.EMAIL_CONFIRM,
+        from_email=EMAIL_CONFIRM,
         recipient_list=[user.email],
         fail_silently=False,
     )
