@@ -18,7 +18,6 @@ from reviews.models import Category, Genre, Review, Title
 
 from .permissions import (
     AdminPermission,
-    AuthenticatedPermission,
     AuthorPermission,
     IsAnonReadOnlyPermission,
     ModeratorPermission,
