@@ -1,10 +1,10 @@
 import csv
-from pathlib import Path
 import sqlite3
+from pathlib import Path
 
 from django.core.management.base import BaseCommand
 
-from reviews.models import Category, Genre, GenreTitle, Title
+from reviews.models import Category, Genre, GenreTitle, Review, Title
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -18,7 +18,7 @@ DATA_SOURCES = {
     Title: 'titles.csv',
     GenreTitle: 'genre_title.csv',
     # Users: 'users.csv',
-    # Review: 'review.csv',
+    Review: 'review.csv',
     # Comment: 'comments.csv',
 }
 
@@ -45,7 +45,15 @@ DATA_MAPPING = {
         'id': 'id',
         'title_id': 'title_id',
         'genre_id': 'genre_id'
-    }
+    },
+    Review: {
+        'id': 'id',
+        'title_id': 'title_id',
+        'text': 'text',
+        'author': 'author',
+        'score': 'score',
+        'pub_date': 'pub_date'
+    },
 }
 
 

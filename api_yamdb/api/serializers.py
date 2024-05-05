@@ -1,5 +1,5 @@
-﻿from rest_framework import serializers
-
+from rest_framework import serializers
+from reviews.models import Review
 from django.contrib.auth import get_user_model
 
 
@@ -58,3 +58,11 @@ class UserSerializer(serializers.ModelSerializer):
                 'Имя me запрещено'
             )
         return username
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
+        model = Review
+        read_only_fields = ('id', 'author', 'pub_date')
