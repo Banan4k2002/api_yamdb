@@ -54,7 +54,6 @@ class TitleViewSet(ModelViewSet):
                      'genre__slug', 'category__slug')
 
     def get_serializer_class(self):
-        print(self.action)
         if self.action in ['create', 'update', 'partial_update']:
             return TitleCreteUpdateSerializer
         return TitleSerializer
