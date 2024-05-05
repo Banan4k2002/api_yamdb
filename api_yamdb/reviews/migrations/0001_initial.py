@@ -8,15 +8,25 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
             name='Category',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=256, verbose_name='Название')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'name',
+                    models.CharField(max_length=256, verbose_name='Название'),
+                ),
                 ('slug', models.SlugField(unique=True, verbose_name='Слаг')),
             ],
             options={
@@ -27,8 +37,19 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Genre',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=256, verbose_name='Название')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'name',
+                    models.CharField(max_length=256, verbose_name='Название'),
+                ),
                 ('slug', models.SlugField(unique=True)),
             ],
             options={
@@ -39,19 +60,62 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='GenreTitle',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('Genre', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='reviews.genre')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'Genre',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to='reviews.genre',
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
             name='Title',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=256, verbose_name='Название')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
+                (
+                    'name',
+                    models.CharField(max_length=256, verbose_name='Название'),
+                ),
                 ('year', models.IntegerField(verbose_name='Год')),
-                ('description', models.TextField(blank=True, null=True, verbose_name='Описание')),
-                ('category', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='titles', to='reviews.category')),
-                ('genre', models.ManyToManyField(through='reviews.GenreTitle', to='reviews.Genre')),
+                (
+                    'description',
+                    models.TextField(
+                        blank=True, null=True, verbose_name='Описание'
+                    ),
+                ),
+                (
+                    'category',
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name='titles',
+                        to='reviews.category',
+                    ),
+                ),
+                (
+                    'genre',
+                    models.ManyToManyField(
+                        through='reviews.GenreTitle', to='reviews.Genre'
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'Произведение',
@@ -61,6 +125,10 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='genretitle',
             name='Title',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='genres', to='reviews.title'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name='genres',
+                to='reviews.title',
+            ),
         ),
     ]

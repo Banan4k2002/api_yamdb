@@ -15,12 +15,42 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Review',
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name='ID',
+                    ),
+                ),
                 ('text', models.TextField(verbose_name='Текст отзыва')),
                 ('author', models.IntegerField(verbose_name='Автор')),
-                ('score', models.PositiveSmallIntegerField(validators=[django.core.validators.MinValueValidator(1), django.core.validators.MaxValueValidator(10)], verbose_name='Оценка')),
-                ('pub_date', models.DateTimeField(auto_now_add=True, verbose_name='Дата публикации отзыва')),
-                ('title', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reviews', to='reviews.title')),
+                (
+                    'score',
+                    models.PositiveSmallIntegerField(
+                        validators=[
+                            django.core.validators.MinValueValidator(1),
+                            django.core.validators.MaxValueValidator(10),
+                        ],
+                        verbose_name='Оценка',
+                    ),
+                ),
+                (
+                    'pub_date',
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        verbose_name='Дата публикации отзыва',
+                    ),
+                ),
+                (
+                    'title',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='reviews',
+                        to='reviews.title',
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'отзыв',
@@ -29,10 +59,14 @@ class Migration(migrations.Migration):
         ),
         migrations.AddConstraint(
             model_name='review',
-            constraint=models.UniqueConstraint(fields=('author', 'title'), name='unique_author_title'),
+            constraint=models.UniqueConstraint(
+                fields=('author', 'title'), name='unique_author_title'
+            ),
         ),
         migrations.AddConstraint(
             model_name='review',
-            constraint=models.CheckConstraint(check=models.Q(score__range=(1, 10)), name='check_score'),
+            constraint=models.CheckConstraint(
+                check=models.Q(score__range=(1, 10)), name='check_score'
+            ),
         ),
     ]

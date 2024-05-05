@@ -12,7 +12,6 @@ DB_PATH = BASE_DIR.joinpath('db.sqlite3')
 STATIC_DIR = BASE_DIR.joinpath('static', 'data')
 
 DATA_SOURCES = {
-
     Category: 'category.csv',
     Genre: 'genre.csv',
     Title: 'titles.csv',
@@ -29,37 +28,29 @@ DATA_MAPPING = {
         'name': 'name',
         'year': 'year',
         'category': 'category_id',
-        'description': 'description'
+        'description': 'description',
     },
     Category: {
         'id': 'id',
         'name': 'name',
         'slug': 'slug',
     },
-    Genre: {
-        'id': 'id',
-        'name': 'name',
-        'slug': 'slug'
-    },
-    GenreTitle: {
-        'id': 'id',
-        'title_id': 'title_id',
-        'genre_id': 'genre_id'
-    },
+    Genre: {'id': 'id', 'name': 'name', 'slug': 'slug'},
+    GenreTitle: {'id': 'id', 'title_id': 'title_id', 'genre_id': 'genre_id'},
     Review: {
         'id': 'id',
         'title_id': 'title_id',
         'text': 'text',
         'author': 'author',
         'score': 'score',
-        'pub_date': 'pub_date'
+        'pub_date': 'pub_date',
     },
     Comment: {
         'id': 'id',
         'review_id': 'review_id',
         'text': 'text',
         'author': 'author',
-        'pub_date': 'pub_date'
+        'pub_date': 'pub_date',
     },
 }
 
@@ -69,7 +60,7 @@ class Command(BaseCommand):
 
     def get_data(self, model_name, file_name):
         """Импорт данных для заданной модели из файла *.csv
-         с полной очисткой таблицы"""
+        с полной очисткой таблицы"""
 
         file_path = STATIC_DIR.joinpath(file_name)
         mapping = DATA_MAPPING[model_name]
@@ -95,18 +86,21 @@ class Command(BaseCommand):
             cursor.execute(sql_delete_string)
 
             # Получаем имена столбцов целевой таблицы
-            column_list = cursor.execute('PRAGMA table_info("' +
-                                         table_name + '")')
+            column_list = cursor.execute(
+                'PRAGMA table_info("' + table_name + '")'
+            )
             column_list = [item[1] for item in column_list.fetchall()]
             print('column_list', column_list)
 
             # Поля, которые не заданы в файлах
-            null_fields = {key: None for key in column_list
-                           if key not in mapped_fields}
+            null_fields = {
+                key: None for key in column_list if key not in mapped_fields
+            }
 
             fields = ', '.join(f':{item}' for item in column_list)
-            sql_insert_string = (f'INSERT INTO {table_name} VALUES '
-                                 f'({fields});')
+            sql_insert_string = (
+                f'INSERT INTO {table_name} VALUES ' f'({fields});'
+            )
 
             print('insert_string', sql_insert_string)
 
@@ -115,8 +109,9 @@ class Command(BaseCommand):
                 row_result = {}
 
                 # Приводим числовые значения к int.
-                cleaned_row = [int(item) if item.isnumeric()
-                               else item for item in row]
+                cleaned_row = [
+                    int(item) if item.isnumeric() else item for item in row
+                ]
 
                 print('cleaned_row', cleaned_row)
 

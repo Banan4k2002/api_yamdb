@@ -1,12 +1,10 @@
 import datetime as dt
 
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from reviews.constants import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
-from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
-
+from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
@@ -20,12 +18,16 @@ class CategorySerializer(serializers.ModelSerializer):
 
     def validate_name(self, value):
         if len(value) > NAME_MAX_LENGTH:
-            raise serializers.ValidationError(f'Длина имени больше {NAME_MAX_LENGTH}.')
+            raise serializers.ValidationError(
+                f'Длина имени больше {NAME_MAX_LENGTH}.'
+            )
         return value
 
     def validate_slug(self, value):
         if len(value) > SLUG_MAX_LENGTH:
-            raise serializers.ValidationError(f'Длина слага больше {SLUG_MAX_LENGTH}.')
+            raise serializers.ValidationError(
+                f'Длина слага больше {SLUG_MAX_LENGTH}.'
+            )
         return value
 
 
@@ -38,24 +40,36 @@ class GenreSerializer(serializers.ModelSerializer):
 
     def validate_name(self, value):
         if len(value) > NAME_MAX_LENGTH:
-            raise serializers.ValidationError(f'Длина имени больше {NAME_MAX_LENGTH}.')
+            raise serializers.ValidationError(
+                f'Длина имени больше {NAME_MAX_LENGTH}.'
+            )
         return value
 
     def validate_slug(self, value):
         if len(value) > SLUG_MAX_LENGTH:
-            raise serializers.ValidationError(f'Длина слага больше {SLUG_MAX_LENGTH}.')
+            raise serializers.ValidationError(
+                f'Длина слага больше {SLUG_MAX_LENGTH}.'
+            )
         return value
 
 
 class TitleSerializer(serializers.ModelSerializer):
     """Сериализатор произведений."""
+
     genre = GenreSerializer(many=True, required=False)
     category = CategorySerializer()
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year',
-                  'description', 'genre', 'category', 'rating')
+        fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+            'genre',
+            'category',
+            'rating',
+        )
 
     def validate_year(self, value):
         if value > dt.date.today().year:
@@ -64,16 +78,24 @@ class TitleSerializer(serializers.ModelSerializer):
 
 
 class TitleCreteUpdateSerializer(serializers.ModelSerializer):
-    genre = serializers.SlugRelatedField(many=True,
-                             slug_field='slug',
-                             queryset=Genre.objects.all())
-    category = serializers.SlugRelatedField(slug_field='slug',
-                                queryset=Category.objects.all())
+    genre = serializers.SlugRelatedField(
+        many=True, slug_field='slug', queryset=Genre.objects.all()
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Category.objects.all()
+    )
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year',
-                  'description', 'genre', 'category', 'rating')
+        fields = (
+            'id',
+            'name',
+            'year',
+            'description',
+            'genre',
+            'category',
+            'rating',
+        )
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -100,14 +122,9 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 class TokenSerializer(serializers.Serializer):
     username = serializers.RegexField(
-        regex=r'^[\w.@+-]+$',
-        max_length=150,
-        required=True
+        regex=r'^[\w.@+-]+$', max_length=150, required=True
     )
-    confirmation_code = serializers.CharField(
-        max_length=150,
-        required=True
-    )
+    confirmation_code = serializers.CharField(max_length=150, required=True)
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -119,14 +136,12 @@ class UserSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'bio',
-            'role'
+            'role',
         )
 
     def validate_username(self, username):
         if username in 'me':
-            raise serializers.ValidationError(
-                'Имя me запрещено'
-            )
+            raise serializers.ValidationError('Имя me запрещено')
         return username
 
 
