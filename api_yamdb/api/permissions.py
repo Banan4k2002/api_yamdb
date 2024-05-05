@@ -29,6 +29,18 @@ class ModeratorPermission(AuthenticatedPermission):
         )
 
 
+class OnlyAdminPostPermissons(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_anonymous:
+            return request.method in permissions.SAFE_METHODS
+        else:
+            return (
+                request.method in permissions.SAFE_METHODS
+                or request.user.role == 'admin'
+                or request.user.is_superuser
+                )
+
+
 class AdminPermission(AuthenticatedPermission):
     def has_permission(self, request, view):
         return super().has_permission(request, view) and request.user.is_admin
