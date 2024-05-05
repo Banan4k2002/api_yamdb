@@ -8,9 +8,10 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Title
+from reviews.models import Review, Title
 from .permissions import (AdminPermission)
 from .serializers import (
+    CommentSerializer,
     RegistrationSerializer,
     ReviewSerializer,
     TokenSerializer,
@@ -157,3 +158,20 @@ class ReviewViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(title=self.get_title())  # , author=self.request.user)
+
+
+class CommentViewSet(ModelViewSet):
+    serializer_class = CommentSerializer
+
+    def get_review(self):
+        return get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id'),
+            title__id=self.kwargs.get('title_id'),
+        )
+
+    def get_queryset(self):
+        return self.get_review().comments.all()
+
+    def perform_create(self, serializer):
+        serializer.save(review=self.get_review())  # , author=self.request.user)

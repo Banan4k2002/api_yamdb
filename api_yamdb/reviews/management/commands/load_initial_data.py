@@ -4,7 +4,7 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand
 
-from reviews.models import Category, Genre, GenreTitle, Review, Title
+from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -19,7 +19,7 @@ DATA_SOURCES = {
     GenreTitle: 'genre_title.csv',
     # Users: 'users.csv',
     Review: 'review.csv',
-    # Comment: 'comments.csv',
+    Comment: 'comments.csv',
 }
 
 # Маппинг заголовков в csv файлах и полей в таблицах.
@@ -52,6 +52,13 @@ DATA_MAPPING = {
         'text': 'text',
         'author': 'author',
         'score': 'score',
+        'pub_date': 'pub_date'
+    },
+    Comment: {
+        'id': 'id',
+        'review_id': 'review_id',
+        'text': 'text',
+        'author': 'author',
         'pub_date': 'pub_date'
     },
 }

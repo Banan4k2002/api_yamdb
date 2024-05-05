@@ -1,7 +1,8 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from api.views import get_jwt_token, ReviewViewSet, UserViewSet, signup
+
+from api.views import CommentViewSet, get_jwt_token, ReviewViewSet, UserViewSet, signup
 
 
 v1_router = DefaultRouter()
@@ -9,6 +10,11 @@ v1_router = DefaultRouter()
 v1_router.register(r'users', UserViewSet)
 v1_router.register(
     r'titles/(?P<title_id>\d+)/reviews', ReviewViewSet, basename='review'
+)
+v1_router.register(
+    r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
+    CommentViewSet,
+    basename='comment',
 )
 
 urlpatterns = [
