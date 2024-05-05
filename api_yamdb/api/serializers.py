@@ -2,6 +2,7 @@ import datetime as dt
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from reviews.constants import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
 from reviews.models import Category, Comment, Genre, Review, Title
@@ -146,16 +147,28 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
 
     class Meta:
         fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
-        read_only_fields = ('id', 'author', 'pub_date')
+        read_only_fields = ('id', 'pub_date')
+        # validators = (
+        #     UniqueTogetherValidator(
+        #         queryset=Review.objects.all(),
+        #         fields=('author', 'title'),
+        #     ),
+        # )
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
 
     class Meta:
         fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
-        read_only_fields = ('id', 'author', 'pub_date')
+        read_only_fields = ('id', 'pub_date')
