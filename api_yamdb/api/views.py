@@ -6,7 +6,9 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 
+from reviews.constants import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
 from reviews.models import Category, Genre, Title
+
 
 from .serializers import (
     CategorySerializer,

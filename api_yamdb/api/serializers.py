@@ -2,9 +2,10 @@ import datetime as dt
 
 from django.shortcuts import get_object_or_404
 
-from rest_framework.serializers import ModelSerializer
+from rest_framework.serializers import ModelSerializer, ValidationError
 from rest_framework.serializers import SlugRelatedField
 
+from reviews.constants import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
 from reviews.models import Category, Genre, GenreTitle, Title
 
 
@@ -15,6 +16,16 @@ class CategorySerializer(ModelSerializer):
         fields = ('name', 'slug')
         model = Category
 
+    def validate_name(self, value):
+        if len(value) > NAME_MAX_LENGTH:
+            raise ValidationError(f'Длина имени больше {NAME_MAX_LENGTH}.')
+        return value
+
+    def validate_slug(self, value):
+        if len(value) > SLUG_MAX_LENGTH:
+            raise ValidationError(f'Длина слага больше {SLUG_MAX_LENGTH}.')
+        return value
+
 
 class GenreSerializer(ModelSerializer):
     """Сериализатор жанров."""
@@ -22,6 +33,16 @@ class GenreSerializer(ModelSerializer):
     class Meta:
         fields = ('name', 'slug')
         model = Genre
+
+    def validate_name(self, value):
+        if len(value) > NAME_MAX_LENGTH:
+            raise ValidationError(f'Длина имени больше {NAME_MAX_LENGTH}.')
+        return value
+
+    def validate_slug(self, value):
+        if len(value) > SLUG_MAX_LENGTH:
+            raise ValidationError(f'Длина слага больше {SLUG_MAX_LENGTH}.')
+        return value
 
 
 class TitleSerializer(ModelSerializer):
@@ -33,6 +54,11 @@ class TitleSerializer(ModelSerializer):
         model = Title
         fields = ('id', 'name', 'year',
                   'description', 'genre', 'category', 'rating')
+
+    def validate_year(self, value):
+        if value > dt.date.today().year:
+            return ValidationError('Произведение еще не создано.')
+        return value
 
 
 class TitleCreteUpdateSerializer(ModelSerializer):
