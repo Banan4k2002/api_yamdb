@@ -3,39 +3,40 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import SearchFilter
 from rest_framework.mixins import (
-    CreateModelMixin, DestroyModelMixin, ListModelMixin)
-
+    CreateModelMixin,
+    DestroyModelMixin,
+    ListModelMixin,
+)
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
-
-from reviews.constants import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
-from reviews.models import Category, Genre, Review,Title
-from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework_simplejwt.tokens import AccessToken
 
-from .permissions import (AdminPermission)
+from reviews.models import Category, Genre, Review, Title
+
+from .permissions import AdminPermission
 from .serializers import (
     CategorySerializer,
     CommentSerializer,
     GenreSerializer,
     RegistrationSerializer,
     ReviewSerializer,
-    TitleSerializer,
     TitleCreteUpdateSerializer,
+    TitleSerializer,
     TokenSerializer,
     UserSerializer,
 )
 
-User =  get_user_model()
+User = get_user_model()
 
 
-class DictViewMixin(CreateModelMixin,
-                    DestroyModelMixin,
-                    ListModelMixin,
-                    GenericViewSet):
+class DictViewMixin(
+    CreateModelMixin, DestroyModelMixin, ListModelMixin, GenericViewSet
+):
     """Михин для жанров и категорий"""
+
     pass
 
 
@@ -51,6 +52,7 @@ class CategoryViewset(DictViewMixin):
 
 class GenreViewSet(DictViewMixin):
     """Вьюсет для жанров."""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     lookup_field = 'slug'
@@ -64,8 +66,13 @@ class TitleViewSet(ModelViewSet):
     queryset = Title.objects.all()
     filter_backends = (SearchFilter,)
     # serializer_class = TitleSerializer
-    search_fields = ('name', 'year', 'description',
-                     'genre__slug', 'category__slug')
+    search_fields = (
+        'name',
+        'year',
+        'description',
+        'genre__slug',
+        'category__slug',
+    )
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
@@ -95,15 +102,14 @@ class TitleViewSet(ModelViewSet):
 @api_view(["POST"])
 @permission_classes([permissions.AllowAny])
 def signup(request):
-    if not User.objects.filter(username=request.data.get('username', None),
-                               email=request.data.get('email', None)).first():
+    if not User.objects.filter(
+        username=request.data.get('username', None),
+        email=request.data.get('email', None),
+    ).first():
         serializer = RegistrationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-    user = get_object_or_404(
-        User,
-        username=request.data['username']
-    )
+    user = get_object_or_404(User, username=request.data['username'])
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         subject="Registration",
@@ -120,8 +126,7 @@ def get_jwt_token(request):
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     user = get_object_or_404(
-        User,
-        username=serializer.validated_data["username"]
+        User, username=serializer.validated_data["username"]
     )
 
     if default_token_generator.check_token(
@@ -178,7 +183,6 @@ class UserViewSet(ModelViewSet):
             'patch',
         ],
         detail=False,
-
         url_path="me",
         permission_classes=[permissions.IsAuthenticated],
     )
@@ -229,7 +233,7 @@ class ReviewViewSet(ModelViewSet):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        serializer.save(title=self.get_title())  # , author=self.request.user)
+        serializer.save(title=self.get_title(), author=self.request.user)
 
 
 class CommentViewSet(ModelViewSet):
@@ -246,4 +250,4 @@ class CommentViewSet(ModelViewSet):
         return self.get_review().comments.all()
 
     def perform_create(self, serializer):
-        serializer.save(review=self.get_review())  # , author=self.request.user)
+        serializer.save(review=self.get_review(), author=self.request.user)

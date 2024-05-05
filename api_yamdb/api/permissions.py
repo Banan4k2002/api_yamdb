@@ -1,7 +1,7 @@
 from rest_framework import permissions
 
 
-class IsAnonReadOnlyPermission (permissions.BasePermission):
+class IsAnonReadOnlyPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.method in permissions.SAFE_METHODS
 
@@ -18,17 +18,15 @@ class AuthorPermission(AuthenticatedPermission):
 
 class ModeratorPermission(AuthenticatedPermission):
     def has_permission(self, request, view):
-        return super().has_permission(
-            request,
-            view
-        ) and request.user.is_moderator
+        return (
+            super().has_permission(request, view) and request.user.is_moderator
+        )
 
     def has_object_permission(self, request, view, obj):
-        return super().has_object_permission(
-            request,
-            view,
-            obj
-        ) or request.user.is_moderator
+        return (
+            super().has_object_permission(request, view, obj)
+            or request.user.is_moderator
+        )
 
 
 class AdminPermission(AuthenticatedPermission):
@@ -36,11 +34,10 @@ class AdminPermission(AuthenticatedPermission):
         return super().has_permission(request, view) and request.user.is_admin
 
     def has_object_permission(self, request, view, obj):
-        return super().has_object_permission(
-            request,
-            view,
-            obj
-        ) or request.user.is_admin
+        return (
+            super().has_object_permission(request, view, obj)
+            or request.user.is_admin
+        )
 
 
 class SuperUserPermission(permissions.BasePermission):

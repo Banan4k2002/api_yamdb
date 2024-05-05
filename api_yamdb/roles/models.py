@@ -21,30 +21,23 @@ class User(AbstractUser):
         verbose_name='Имя пользователя',
         unique=True,
         db_index=True,
-        validators=[RegexValidator(
-            regex=r'^[\w.@+-]+$',
-            message='Имя пользователя содержит некорректный символ'
-        )]
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+$',
+                message='Имя пользователя содержит некорректный символ',
+            )
+        ],
     )
     email = models.EmailField(
-        max_length=254,
-        verbose_name='email',
-        unique=True
+        max_length=254, verbose_name='email', unique=True
     )
     first_name = models.CharField(
-        max_length=150,
-        verbose_name='имя',
-        blank=True
+        max_length=150, verbose_name='имя', blank=True
     )
     last_name = models.CharField(
-        max_length=150,
-        verbose_name='фамилия',
-        blank=True
+        max_length=150, verbose_name='фамилия', blank=True
     )
-    bio = models.TextField(
-        verbose_name='биография',
-        blank=True
-    )
+    bio = models.TextField(verbose_name='биография', blank=True)
     role = models.CharField(
         "Роль пользователя",
         max_length=20,
@@ -58,8 +51,7 @@ class User(AbstractUser):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["username", "email"],
-                name="unique_user"
+                fields=["username", "email"], name="unique_user"
             )
         ]
 
@@ -69,9 +61,7 @@ class User(AbstractUser):
     @property
     def is_admin(self):
         return (
-            self.is_superuser
-            or self.role == UserRole.ADMIN
-            or self.is_staff
+            self.is_superuser or self.role == UserRole.ADMIN or self.is_staff
         )
 
     @property

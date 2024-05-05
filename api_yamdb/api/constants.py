@@ -1,2 +1,2 @@
-EMAIL_SUBJECT = 'Код регистрации'
+EMAIL_SUBJECT = 'РљРѕРґ СЂРµРіРёСЃС‚СЂР°С†РёРё'
 EMAIL_CONFIRM = 'yamdb.host@yandex.ru'
