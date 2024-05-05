@@ -57,7 +57,7 @@ class Title(models.Model):
     @property
     def rating(self):
         data = self.reviews.aggregate(models.Avg('score'))
-        return data.get('score__avg', 0)
+        return data.get('score__avg')
 
     def __str__(self):
         return self.name
