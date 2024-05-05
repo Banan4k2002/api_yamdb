@@ -27,7 +27,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig',
-    'roles.apps.RolesConfig'
+    'roles.apps.RolesConfig',
 ]
 
 MIDDLEWARE = [
@@ -110,6 +110,7 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
+# Rest Framework
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
