@@ -16,7 +16,12 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Review, Title
 
-from .permissions import AdminPermission
+from .permissions import (
+    AdminPermission,
+    AuthorPermission,
+    IsAnonReadOnlyPermission,
+    ModeratorPermission,
+)
 from .serializers import (
     CategorySerializer,
     CommentSerializer,
@@ -225,6 +230,12 @@ class UserViewSet(ModelViewSet):
 
 class ReviewViewSet(ModelViewSet):
     serializer_class = ReviewSerializer
+    permission_classes = (AuthorPermission,)
+
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
 
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -235,9 +246,24 @@ class ReviewViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(title=self.get_title(), author=self.request.user)
 
+    def get_permissions(self):
+        if self.request.user.is_anonymous:
+            return (IsAnonReadOnlyPermission(),)
+        elif self.request.user.is_moderator:
+            return (ModeratorPermission(),)
+        elif self.request.user.is_admin:
+            return (AdminPermission(),)
+        return super().get_permissions()
+
 
 class CommentViewSet(ModelViewSet):
     serializer_class = CommentSerializer
+    permission_classes = (AuthorPermission,)
+
+    def update(self, request, *args, **kwargs):
+        if request.method == 'PUT':
+            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        return super().update(request, *args, **kwargs)
 
     def get_review(self):
         return get_object_or_404(
@@ -251,3 +277,12 @@ class CommentViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(review=self.get_review(), author=self.request.user)
+
+    def get_permissions(self):
+        if self.request.user.is_anonymous:
+            return (IsAnonReadOnlyPermission(),)
+        elif self.request.user.is_moderator:
+            return (ModeratorPermission(),)
+        elif self.request.user.is_admin:
+            return (AdminPermission(),)
+        return super().get_permissions()
