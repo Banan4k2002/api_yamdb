@@ -38,7 +38,7 @@ class OnlyAdminPostPermissons(permissions.BasePermission):
                 request.method in permissions.SAFE_METHODS
                 or request.user.role == 'admin'
                 or request.user.is_superuser
-                )
+            )
 
 
 class AdminPermission(AuthenticatedPermission):

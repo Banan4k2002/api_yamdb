@@ -2,17 +2,12 @@ import csv
 import sqlite3
 from pathlib import Path
 
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
-from reviews.models import (
-    Category,
-    Comment,
-    Genre,
-    GenreTitle,
-    Review,
-    Title,
-    User)
+from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
 
+User = get_user_model()
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -33,44 +28,35 @@ DATA_SOURCES = {
 
 # Маппинг заголовков в csv файлах и полей в таблицах.
 DATA_MAPPING = {
-
     Title: {
         'id': 'id',
         'name': 'name',
         'year': 'year',
         'category': 'category_id',
-        'description': 'description'
+        'description': 'description',
     },
     Category: {
         'id': 'id',
         'name': 'name',
         'slug': 'slug',
     },
-    Genre: {
-        'id': 'id',
-        'name': 'name',
-        'slug': 'slug'
-    },
-    GenreTitle: {
-        'id': 'id',
-        'title_id': 'title_id',
-        'genre_id': 'genre_id'
-    },
-     Comment: {
+    Genre: {'id': 'id', 'name': 'name', 'slug': 'slug'},
+    GenreTitle: {'id': 'id', 'title_id': 'title_id', 'genre_id': 'genre_id'},
+    Comment: {
         'id': 'id',
         'review_id': 'review_id',
         'text': 'text',
         'author': 'author_id',
-        'pub_date': 'pub_date'
+        'pub_date': 'pub_date',
     },
     Review: {
-         'id': 'id',
-         'text':'text',
-         'title_id': 'title_id',
-         'author': 'author_id',
-         'score': 'score',
-         'pub_date': 'pub_date'
-     },
+        'id': 'id',
+        'text': 'text',
+        'title_id': 'title_id',
+        'author': 'author_id',
+        'score': 'score',
+        'pub_date': 'pub_date',
+    },
 }
 
 
@@ -142,7 +128,7 @@ class Command(BaseCommand):
 
             reader = csv.DictReader(f_n)
             for row in reader:
-                user = User.objects.create_user(
+                User.objects.create_user(
                     id=row.get('id'),
                     username=row.get('username'),
                     email=row.get('email'),
@@ -150,10 +136,10 @@ class Command(BaseCommand):
                     role=row.get('role'),
                     bio=row.get('bio'),
                     first_name=row.get('first_name'),
-                    last_name=row.get('last_name'))
+                    last_name=row.get('last_name'),
+                )
 
     def handle(self, *args, **kwargs):
         self.create_users()
         for key, value in DATA_SOURCES.items():
             self.get_data(key, value)
-
