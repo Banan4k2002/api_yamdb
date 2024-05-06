@@ -2,8 +2,16 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import (
+    CharFilter,
+    NumberFilter,
+    DjangoFilterBackend,
+    FilterSet
+)
+
 from rest_framework import permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.filters import SearchFilter
 from rest_framework.mixins import (
     CreateModelMixin,
@@ -15,11 +23,11 @@ from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Review, Title
-
 from .permissions import (
     AdminPermission,
     AuthorPermission,
     IsAnonReadOnlyPermission,
+    OnlyAdminPostPermissons,
     ModeratorPermission,
 )
 from .serializers import (
@@ -37,10 +45,11 @@ from .serializers import (
 User = get_user_model()
 
 
-class DictViewMixin(
-    CreateModelMixin, DestroyModelMixin, ListModelMixin, GenericViewSet
-):
-    """Михин для жанров и категорий"""
+class DictViewMixin(CreateModelMixin,
+                    DestroyModelMixin,
+                    ListModelMixin,
+                    GenericViewSet):
+    """Миксин для жанров и категорий"""
 
     pass
 
@@ -53,6 +62,7 @@ class CategoryViewset(DictViewMixin):
     lookup_field = 'slug'
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
+    permission_classes = (OnlyAdminPostPermissons,)
 
 
 class GenreViewSet(DictViewMixin):
@@ -63,45 +73,52 @@ class GenreViewSet(DictViewMixin):
     lookup_field = 'slug'
     filter_backends = (SearchFilter,)
     search_fields = ('name',)
+    permission_classes = (OnlyAdminPostPermissons,)
+
+
+class TitleFilter(FilterSet):
+    genre = CharFilter(field_name='genre__slug')
+    category = CharFilter(field_name='category__slug')
+    year = NumberFilter(field_name='year')
+    description = CharFilter(field_name='description')
+
+    class Meta:
+        model = Title
+        fields = ['genre__slug', 'name', 'year',
+                  'description', 'category__slug']
 
 
 class TitleViewSet(ModelViewSet):
     """Вьюсет для произведений."""
-
     queryset = Title.objects.all()
-    filter_backends = (SearchFilter,)
-    # serializer_class = TitleSerializer
-    search_fields = (
-        'name',
-        'year',
-        'description',
-        'genre__slug',
-        'category__slug',
-    )
+    filter_backends = (DjangoFilterBackend,)
+    permission_classes = (OnlyAdminPostPermissons,)
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
+        if self.detail:
+            if self.request.method == 'PUT':
+                raise MethodNotAllowed(self.request.method)
         if self.action in ['create', 'update', 'partial_update']:
             return TitleCreteUpdateSerializer
         return TitleSerializer
 
-    def handle_create_update(self, serializer):
-        """Обработка сохранения данных с переключением сериализатора."""
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-
             obj = serializer.save()
             serializer = TitleSerializer(obj)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def create(self, request):
-        serializer = self.get_serializer(data=request.data)
-        return self.handle_create_update(serializer)
 
     def partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
-        return self.handle_create_update(serializer)
+        if serializer.is_valid():
+            obj = serializer.save()
+            serializer = TitleSerializer(obj)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["POST"])

@@ -1,4 +1,5 @@
 import datetime as dt
+import re
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
@@ -17,16 +18,20 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
 
     def validate_name(self, value):
-        if len(value) > NAME_MAX_LENGTH:
+        if len(value) >= NAME_MAX_LENGTH:
             raise serializers.ValidationError(
-                f'Длина имени больше {NAME_MAX_LENGTH}.'
+                f'Длина поля name больше {NAME_MAX_LENGTH}.'
             )
         return value
 
     def validate_slug(self, value):
-        if len(value) > SLUG_MAX_LENGTH:
+        if len(value) >= SLUG_MAX_LENGTH:
             raise serializers.ValidationError(
-                f'Длина слага больше {SLUG_MAX_LENGTH}.'
+                f'Длина поля slug больше {SLUG_MAX_LENGTH}.'
+            )
+        if not re.match(r'^[-a-zA-Z0-9_]+$', value):
+            raise serializers.ValidationError(
+                'Некорректное значение поля slug'
             )
         return value
 
@@ -39,14 +44,14 @@ class GenreSerializer(serializers.ModelSerializer):
         model = Genre
 
     def validate_name(self, value):
-        if len(value) > NAME_MAX_LENGTH:
+        if len(value) >= NAME_MAX_LENGTH:
             raise serializers.ValidationError(
                 f'Длина имени больше {NAME_MAX_LENGTH}.'
             )
         return value
 
     def validate_slug(self, value):
-        if len(value) > SLUG_MAX_LENGTH:
+        if len(value) >= SLUG_MAX_LENGTH:
             raise serializers.ValidationError(
                 f'Длина слага больше {SLUG_MAX_LENGTH}.'
             )
@@ -71,6 +76,12 @@ class TitleSerializer(serializers.ModelSerializer):
             'rating',
         )
 
+        extra_kwargs = {
+            'genre': {'requered': False},
+            'year': {'required': False},
+            'category': {'required': False}
+        }
+
     def validate_year(self, value):
         if value > dt.date.today().year:
             return serializers.ValidationError('Произведение еще не создано.')
@@ -79,11 +90,17 @@ class TitleSerializer(serializers.ModelSerializer):
 
 class TitleCreteUpdateSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
-        many=True, slug_field='slug', queryset=Genre.objects.all()
+        many=True,
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        required=False
     )
     category = serializers.SlugRelatedField(
-        slug_field='slug', queryset=Category.objects.all()
+        slug_field='slug',
+        queryset=Category.objects.all(),
+        required=False
     )
+    year = serializers.IntegerField(required=False)
 
     class Meta:
         model = Title

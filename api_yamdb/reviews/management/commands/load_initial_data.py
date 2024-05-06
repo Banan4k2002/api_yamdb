@@ -4,54 +4,73 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand
 
-from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
+from reviews.models import (
+    Category,
+    Comment,
+    Genre,
+    GenreTitle,
+    Review,
+    Title,
+    User)
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
 DB_PATH = BASE_DIR.joinpath('db.sqlite3')
 STATIC_DIR = BASE_DIR.joinpath('static', 'data')
 
+USER_FILE = 'users.csv'
+USER_PASSEWORD = 'qwerty1'
+
 DATA_SOURCES = {
     Category: 'category.csv',
     Genre: 'genre.csv',
     Title: 'titles.csv',
     GenreTitle: 'genre_title.csv',
-    # Users: 'users.csv',
     Review: 'review.csv',
     Comment: 'comments.csv',
 }
 
 # Маппинг заголовков в csv файлах и полей в таблицах.
 DATA_MAPPING = {
+
     Title: {
         'id': 'id',
         'name': 'name',
         'year': 'year',
         'category': 'category_id',
-        'description': 'description',
+        'description': 'description'
     },
     Category: {
         'id': 'id',
         'name': 'name',
         'slug': 'slug',
     },
-    Genre: {'id': 'id', 'name': 'name', 'slug': 'slug'},
-    GenreTitle: {'id': 'id', 'title_id': 'title_id', 'genre_id': 'genre_id'},
-    Review: {
+    Genre: {
+        'id': 'id',
+        'name': 'name',
+        'slug': 'slug'
+    },
+    GenreTitle: {
         'id': 'id',
         'title_id': 'title_id',
-        'text': 'text',
-        'author': 'author',
-        'score': 'score',
-        'pub_date': 'pub_date',
+        'genre_id': 'genre_id'
     },
-    Comment: {
+     Comment: {
         'id': 'id',
         'review_id': 'review_id',
         'text': 'text',
-        'author': 'author',
-        'pub_date': 'pub_date',
+        'author': 'author_id',
+        'pub_date': 'pub_date'
     },
+    Review: {
+         'id': 'id',
+         'text':'text',
+         'title_id': 'title_id',
+         'author': 'author_id',
+         'score': 'score',
+         'pub_date': 'pub_date'
+     },
 }
 
 
@@ -64,7 +83,6 @@ class Command(BaseCommand):
 
         file_path = STATIC_DIR.joinpath(file_name)
         mapping = DATA_MAPPING[model_name]
-        print(mapping)
         parsed_data = []
 
         with open(file_path, encoding='utf8', mode='r') as f_n:
@@ -80,7 +98,6 @@ class Command(BaseCommand):
             connection = sqlite3.connect(DB_PATH)
             cursor = connection.cursor()
 
-            print(headers)
             # Очищаем таблицу
             sql_delete_string = f'DELETE FROM {table_name}'
             cursor.execute(sql_delete_string)
@@ -90,7 +107,6 @@ class Command(BaseCommand):
                 'PRAGMA table_info("' + table_name + '")'
             )
             column_list = [item[1] for item in column_list.fetchall()]
-            print('column_list', column_list)
 
             # Поля, которые не заданы в файлах
             null_fields = {
@@ -101,10 +117,6 @@ class Command(BaseCommand):
             sql_insert_string = (
                 f'INSERT INTO {table_name} VALUES ' f'({fields});'
             )
-
-            print('insert_string', sql_insert_string)
-
-            print(null_fields)
             for row in reader:
                 row_result = {}
 
@@ -113,18 +125,35 @@ class Command(BaseCommand):
                     int(item) if item.isnumeric() else item for item in row
                 ]
 
-                print('cleaned_row', cleaned_row)
-
-                print('mapping_fields', mapped_fields)
                 row_result = dict(zip(mapped_fields, cleaned_row))
-                print('data', row_result)
                 row_result.update(null_fields)
                 parsed_data.append(row_result)
-            # print(parsed_data)
+
             cursor.executemany(sql_insert_string, parsed_data)
             connection.commit()
             connection.close()
 
+    def create_users(self):
+        model_name = User
+        file_path = STATIC_DIR.joinpath(USER_FILE)
+
+        model_name.objects.all().delete()
+        with open(file_path, encoding='utf8', mode='r', newline='') as f_n:
+
+            reader = csv.DictReader(f_n)
+            for row in reader:
+                user = User.objects.create_user(
+                    id=row.get('id'),
+                    username=row.get('username'),
+                    email=row.get('email'),
+                    password=USER_PASSEWORD,
+                    role=row.get('role'),
+                    bio=row.get('bio'),
+                    first_name=row.get('first_name'),
+                    last_name=row.get('last_name'))
+
     def handle(self, *args, **kwargs):
+        self.create_users()
         for key, value in DATA_SOURCES.items():
             self.get_data(key, value)
+
