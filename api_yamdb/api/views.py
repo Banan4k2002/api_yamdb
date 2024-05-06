@@ -4,11 +4,10 @@ from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import (
     CharFilter,
-    NumberFilter,
     DjangoFilterBackend,
-    FilterSet
+    FilterSet,
+    NumberFilter,
 )
-
 from rest_framework import permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import MethodNotAllowed
@@ -19,16 +18,18 @@ from rest_framework.mixins import (
     ListModelMixin,
 )
 from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Category, Genre, Review, Title
+
 from .permissions import (
     AdminPermission,
     AuthorPermission,
     IsAnonReadOnlyPermission,
-    OnlyAdminPostPermissons,
     ModeratorPermission,
+    OnlyAdminPostPermissons,
 )
 from .serializers import (
     CategorySerializer,
@@ -45,10 +46,9 @@ from .serializers import (
 User = get_user_model()
 
 
-class DictViewMixin(CreateModelMixin,
-                    DestroyModelMixin,
-                    ListModelMixin,
-                    GenericViewSet):
+class DictViewMixin(
+    CreateModelMixin, DestroyModelMixin, ListModelMixin, GenericViewSet
+):
     """Миксин для жанров и категорий"""
 
     pass
@@ -84,12 +84,18 @@ class TitleFilter(FilterSet):
 
     class Meta:
         model = Title
-        fields = ['genre__slug', 'name', 'year',
-                  'description', 'category__slug']
+        fields = [
+            'genre__slug',
+            'name',
+            'year',
+            'description',
+            'category__slug',
+        ]
 
 
 class TitleViewSet(ModelViewSet):
     """Вьюсет для произведений."""
+
     queryset = Title.objects.all()
     filter_backends = (DjangoFilterBackend,)
     permission_classes = (OnlyAdminPostPermissons,)
@@ -165,7 +171,6 @@ class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (AdminPermission,)
-    # pagination_class = PageNumberPagination
 
     def update(self, request, *args, **kwargs):
         if request.method == 'PUT':
@@ -261,6 +266,13 @@ class ReviewViewSet(ModelViewSet):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
+        if Review.objects.filter(
+            author=self.request.user,
+            title=self.get_title(),
+        ).exists():
+            raise ValidationError(
+                'На произведение можно оставить только один отзыв'
+            )
         serializer.save(title=self.get_title(), author=self.request.user)
 
     def get_permissions(self):

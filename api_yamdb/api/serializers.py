@@ -79,7 +79,7 @@ class TitleSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'genre': {'requered': False},
             'year': {'required': False},
-            'category': {'required': False}
+            'category': {'required': False},
         }
 
     def validate_year(self, value):
@@ -93,12 +93,10 @@ class TitleCreteUpdateSerializer(serializers.ModelSerializer):
         many=True,
         slug_field='slug',
         queryset=Genre.objects.all(),
-        required=False
+        required=False,
     )
     category = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all(),
-        required=False
+        slug_field='slug', queryset=Category.objects.all(), required=False
     )
     year = serializers.IntegerField(required=False)
 
@@ -168,10 +166,9 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        fields = ('id', 'text', 'author', 'score', 'pub_date', 'title')
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
         read_only_fields = ('id', 'pub_date')
-        extra_kwargs = {'title': {'required': False}}
 
 
 class CommentSerializer(serializers.ModelSerializer):
