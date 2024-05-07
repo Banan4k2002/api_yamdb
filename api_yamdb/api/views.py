@@ -22,16 +22,14 @@ from rest_framework.serializers import ValidationError
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Genre, Review, Title
-
-from .permissions import (
+from api.permissions import (
     AdminPermission,
     AuthorPermission,
     IsAnonReadOnlyPermission,
     ModeratorPermission,
     OnlyAdminPostPermissons,
 )
-from .serializers import (
+from api.serializers import (
     CategorySerializer,
     CommentSerializer,
     GenreSerializer,
@@ -42,6 +40,7 @@ from .serializers import (
     TokenSerializer,
     UserSerializer,
 )
+from reviews.models import Category, Genre, Review, Title
 
 User = get_user_model()
 

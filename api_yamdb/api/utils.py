@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 
-from .constants import EMAIL_CONFIRM, EMAIL_SUBJECT
+from api.constants import EMAIL_CONFIRM, EMAIL_SUBJECT
 
 User = get_user_model()
 
