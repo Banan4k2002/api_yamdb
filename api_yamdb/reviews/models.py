@@ -5,7 +5,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import CheckConstraint
 
-from .constants import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
+from reviews.constants import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
 
 User = get_user_model()
 
