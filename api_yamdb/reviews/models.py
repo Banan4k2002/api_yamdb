@@ -70,19 +70,25 @@ class GenreTitle(models.Model):
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
 
-class Review(models.Model):
+class BasePublicationModel(models.Model):
     text = models.TextField('Текст')
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='reviews'
+        User, on_delete=models.CASCADE, related_name='%(class)s'
     )
+    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
+
+    class Meta:
+        abstract = True
+
+
+class Review(BasePublicationModel):
     score = models.PositiveSmallIntegerField(
         'Оценка',
         validators=(
-            MinValueValidator(1),
-            MaxValueValidator(10),
+            MinValueValidator(1, 'Оценка не может быть меньше чем 1'),
+            MaxValueValidator(10, 'Оценка не может быть больше чем 10'),
         ),
     )
-    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews'
     )
@@ -94,21 +100,13 @@ class Review(models.Model):
             models.UniqueConstraint(
                 fields=('author', 'title'), name='unique_author_title'
             ),
-            models.CheckConstraint(
-                check=models.Q(score__range=(1, 10)), name='check_score'
-            ),
         )
 
     def __str__(self):
         return f'{self.title.name} - {self.score}'
 
 
-class Comment(models.Model):
-    text = models.TextField('Текст')
-    author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='comments'
-    )
-    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
+class Comment(BasePublicationModel):
     review = models.ForeignKey(
         Review, on_delete=models.CASCADE, related_name='comments'
     )
