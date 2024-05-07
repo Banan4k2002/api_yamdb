@@ -3,6 +3,7 @@ import re
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework.validators import ValidationError
 
 from reviews.constants import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
 from reviews.models import Category, Comment, Genre, Review, Title
@@ -169,6 +170,20 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
         read_only_fields = ('id', 'pub_date')
+
+    def validate(self, data):
+        request = self.context.get('request')
+        if request.method == 'POST':
+            data['title'] = self.context.get('view').get_title()
+            data['author'] = request.user
+            if Review.objects.filter(
+                author=data['author'],
+                title=data['title'],
+            ).exists():
+                raise ValidationError(
+                    'На произведение можно оставить только один отзыв'
+                )
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):

@@ -18,7 +18,6 @@ from rest_framework.mixins import (
     ListModelMixin,
 )
 from rest_framework.response import Response
-from rest_framework.serializers import ValidationError
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
@@ -263,16 +262,6 @@ class ReviewViewSet(ModelViewSet):
 
     def get_queryset(self):
         return self.get_title().reviews.all()
-
-    def perform_create(self, serializer):
-        if Review.objects.filter(
-            author=self.request.user,
-            title=self.get_title(),
-        ).exists():
-            raise ValidationError(
-                'На произведение можно оставить только один отзыв'
-            )
-        serializer.save(title=self.get_title(), author=self.request.user)
 
     def get_permissions(self):
         if self.request.user.is_anonymous:
