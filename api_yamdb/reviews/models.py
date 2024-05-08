@@ -1,18 +1,37 @@
-import datetime as dt
-
 from django.contrib.auth import get_user_model
-from django.core.validators import MaxValueValidator, MinValueValidator
+
+from django.core.exceptions import ValidationError
+
+from django.core.validators import (
+    MaxValueValidator,
+    MinValueValidator,
+)
+
 from django.db import models
-from django.db.models import CheckConstraint
+
+from django.utils import timezone
 
 from reviews.constants import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
 
 User = get_user_model()
 
 
-class Category(models.Model):
+def title_year_validation(value):
+    """Функция валидации года."""
+    if value > timezone.now().year:
+        raise ValidationError('Год не может быть больше текущего.')
+    return value
+
+
+class BaseNameSlugModel(models.Model):
     name = models.CharField('Название', max_length=NAME_MAX_LENGTH)
     slug = models.SlugField(unique=True, max_length=SLUG_MAX_LENGTH)
+
+    class Meta:
+        abstract = True
+
+
+class Category(BaseNameSlugModel):
 
     class Meta:
         verbose_name = 'Категория'
@@ -22,9 +41,7 @@ class Category(models.Model):
         return self.name
 
 
-class Genre(models.Model):
-    name = models.CharField('Название', max_length=NAME_MAX_LENGTH)
-    slug = models.SlugField(unique=True, max_length=SLUG_MAX_LENGTH)
+class Genre(BaseNameSlugModel):
 
     class Meta:
         verbose_name = 'Жанр'
@@ -40,34 +57,19 @@ class Title(models.Model):
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL, related_name='titles', null=True
     )
-    genre = models.ManyToManyField(Genre, through='GenreTitle')
+    genre = models.ManyToManyField(Genre)
     description = models.TextField('Описание', null=True, blank=True)
 
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
-        constraints = [
-            CheckConstraint(
-                check=models.Q(year__lte=dt.date.today().year),
-                name='check_title_year',
-            )
-        ]
-
-    @property
     def rating(self):
         data = self.reviews.aggregate(models.Avg('score'))
         return data.get('score__avg')
 
     def __str__(self):
         return self.name
-
-
-class GenreTitle(models.Model):
-    title = models.ForeignKey(
-        Title, on_delete=models.CASCADE, related_name='genres'
-    )
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
 
 class BasePublicationModel(models.Model):

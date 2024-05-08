@@ -4,7 +4,7 @@ from pathlib import Path
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
-from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
+from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
@@ -20,10 +20,11 @@ DATA_SOURCES = {
     Category: 'category.csv',
     Genre: 'genre.csv',
     Title: 'titles.csv',
-    GenreTitle: 'genre_title.csv',
     Review: 'review.csv',
     Comment: 'comments.csv',
 }
+
+GENRE_TITLE_FILE = 'genre_title.csv'
 
 # Маппинг заголовков в csv файлах и полей в таблицах.
 DATA_MAPPING = {
@@ -40,7 +41,6 @@ DATA_MAPPING = {
         'slug': 'slug',
     },
     Genre: {'id': 'id', 'name': 'name', 'slug': 'slug'},
-    GenreTitle: {'id': 'id', 'title_id': 'title_id', 'genre_id': 'genre_id'},
     Comment: {
         'id': 'id',
         'review_id': 'review_id',
@@ -82,6 +82,19 @@ class Command(BaseCommand):
                     last_name=row.get('last_name'),
                 )
 
+    def genre_title_matching(self):
+        title_id = 'title_id'
+        genre_id = 'genre_id'
+
+        file_path = STATIC_DIR.joinpath(GENRE_TITLE_FILE)
+        with open(file_path, encoding='utf8', mode='r') as f_n:
+            reader = csv.DictReader(f_n)
+
+            for row in reader:
+                title = Title.objects.get(pk=row.get(title_id))
+                genre = Genre.objects.get(pk=row.get(genre_id))
+                title.genre.add(genre)
+
     def handle(self, *args, **kwargs):
         self.create_users()
         for model, file_name in DATA_SOURCES.items():
@@ -91,7 +104,7 @@ class Command(BaseCommand):
 
                 headers_str = f_n.readline().rstrip('\n')
                 headers_list = headers_str.split(',')
-                field_names = [DATA_MAPPING[model][item] 
+                field_names = [DATA_MAPPING[model][item]
                                for item in headers_list]
 
                 reader = csv.DictReader(f_n, fieldnames=field_names)
@@ -99,3 +112,6 @@ class Command(BaseCommand):
                 data = [model(**row) for row in reader]
 
                 model.objects.bulk_create(data)
+
+        self.genre_title_matching()
+        self.genre_title_matching()
