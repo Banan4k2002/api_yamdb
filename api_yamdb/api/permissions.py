@@ -1,4 +1,5 @@
 from rest_framework import permissions
+from rest_framework.exceptions import MethodNotAllowed
 
 from roles.models import UserRole
 
@@ -29,6 +30,13 @@ class ModeratorPermission(AuthenticatedPermission):
             super().has_object_permission(request, view, obj)
             or request.user.is_moderator
         )
+
+
+class DisablePUTMethod(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method == 'PUT':
+            raise MethodNotAllowed(request.method)
+        return super().has_object_permission(request, view, obj)
 
 
 class OnlyAdminPostPermissons(permissions.BasePermission):
