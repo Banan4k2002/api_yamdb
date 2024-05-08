@@ -2,31 +2,27 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from django_filters.rest_framework import (
-    CharFilter,
-    DjangoFilterBackend,
-    FilterSet,
-    NumberFilter,
-)
+
+from django_filters.rest_framework import DjangoFilterBackend
+
 from rest_framework import permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.exceptions import MethodNotAllowed
-from rest_framework.filters import SearchFilter
-from rest_framework.mixins import (
-    CreateModelMixin,
-    DestroyModelMixin,
-    ListModelMixin,
-)
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
+from reviews.models import Category, Genre, Review, Title
+
+from api.filters import TitleFilter
+from api.mixins import CreateDestroyListViewSet
 from api.permissions import (
     AdminPermission,
     AuthorPermission,
+    DisablePUTMethod,
     IsAnonReadOnlyPermission,
     ModeratorPermission,
     OnlyAdminPostPermissons,
+
 )
 from api.serializers import (
     CategorySerializer,
@@ -39,83 +35,43 @@ from api.serializers import (
     TokenSerializer,
     UserSerializer,
 )
-from reviews.models import Category, Genre, Review, Title
+
 
 User = get_user_model()
 
 
-class CreateDestroyListViewSet(
-    CreateModelMixin, DestroyModelMixin, ListModelMixin, GenericViewSet
-):
-    """Миксин для жанров и категорий"""
-
-    pass
-
-
 class CategoryViewset(CreateDestroyListViewSet):
     """Вьюсет для категорий."""
-
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    lookup_field = 'slug'
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
-    permission_classes = (OnlyAdminPostPermissons,)
 
 
 class GenreViewSet(CreateDestroyListViewSet):
     """Вьюсет для жанров."""
-
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    lookup_field = 'slug'
-    filter_backends = (SearchFilter,)
-    search_fields = ('name',)
-    permission_classes = (OnlyAdminPostPermissons,)
-
-
-class TitleFilter(FilterSet):
-    genre = CharFilter(field_name='genre__slug')
-    category = CharFilter(field_name='category__slug')
-    year = NumberFilter(field_name='year')
-    description = CharFilter(field_name='description')
-
-    class Meta:
-        model = Title
-        fields = [
-            'genre__slug',
-            'name',
-            'year',
-            'description',
-            'category__slug',
-        ]
 
 
 class TitleViewSet(ModelViewSet):
     """Вьюсет для произведений."""
-
     queryset = Title.objects.all()
     filter_backends = (DjangoFilterBackend,)
-    permission_classes = (OnlyAdminPostPermissons,)
+    permission_classes = (DisablePUTMethod, OnlyAdminPostPermissons, )
     filterset_class = TitleFilter
 
     def get_serializer_class(self):
-        if self.detail:
-            if self.request.method == 'PUT':
-                raise MethodNotAllowed(self.request.method)
         if self.action in ['create', 'update', 'partial_update']:
             return TitleCreateUpdateSerializer
         return TitleSerializer
 
-    def create(self, request):
-        serializer = self.get_serializer(data=request.data)
+    def perform_create(self, serializer):
         if serializer.is_valid():
             obj = serializer.save()
             serializer = TitleSerializer(obj)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def partial_update(self, request, *args, **kwargs):
+    def perform_partial_update(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data)
         if serializer.is_valid():
