@@ -1,12 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.core.validators import (
-    MaxValueValidator,
-    MinValueValidator
-)
-
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils import timezone
+
 from reviews.constants import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
 
 User = get_user_model()
@@ -17,7 +14,6 @@ def title_year_validation(value):
     if value > timezone.now().year:
         raise ValidationError('Год не может быть больше текущего.')
     return value
-
 
 
 class BaseNameSlugModel(models.Model):
@@ -36,7 +32,6 @@ class Category(BaseNameSlugModel):
 
     def __str__(self):
         return self.name
-
 
 
 class Genre(BaseNameSlugModel):
