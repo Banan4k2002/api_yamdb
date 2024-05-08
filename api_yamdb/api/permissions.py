@@ -1,4 +1,6 @@
-from rest_framework import permissions
+﻿from rest_framework import permissions
+
+from .constants import REQUESTED_ROLE_ADMIN
 
 
 class IsAnonReadOnlyPermission(permissions.BasePermission):
@@ -36,7 +38,7 @@ class OnlyAdminPostPermissons(permissions.BasePermission):
         else:
             return (
                 request.method in permissions.SAFE_METHODS
-                or request.user.role == 'admin'
+                or request.user.role == REQUESTED_ROLE_ADMIN
                 or request.user.is_superuser
             )
 

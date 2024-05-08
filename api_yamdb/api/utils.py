@@ -1,6 +1,5 @@
-import random
+﻿import uuid
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
@@ -12,7 +11,7 @@ User = get_user_model()
 
 def generate_confirmation_code(username):
     user = get_object_or_404(User, username=username)
-    confirmation_code = ''.join(random.choices(settings.CONF_GEN, k=15))
+    confirmation_code = str(uuid.uuid4())[:15]
     user.confirmation_code = confirmation_code
     user.save()
 
