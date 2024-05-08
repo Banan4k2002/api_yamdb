@@ -34,7 +34,7 @@ from api.serializers import (
     GenreSerializer,
     RegistrationSerializer,
     ReviewSerializer,
-    TitleCreteUpdateSerializer,
+    TitleCreateUpdateSerializer,
     TitleSerializer,
     TokenSerializer,
     UserSerializer,
@@ -104,7 +104,7 @@ class TitleViewSet(ModelViewSet):
             if self.request.method == 'PUT':
                 raise MethodNotAllowed(self.request.method)
         if self.action in ['create', 'update', 'partial_update']:
-            return TitleCreteUpdateSerializer
+            return TitleCreateUpdateSerializer
         return TitleSerializer
 
     def create(self, request):

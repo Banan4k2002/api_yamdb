@@ -1,7 +1,7 @@
-import datetime as dt
 import re
 
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
 
@@ -11,12 +11,8 @@ from reviews.models import Category, Comment, Genre, Review, Title
 User = get_user_model()
 
 
-class CategorySerializer(serializers.ModelSerializer):
-    """Сериализатор категорий."""
-
-    class Meta:
-        fields = ('name', 'slug')
-        model = Category
+class BaseNameSlugSerializer(serializers.ModelSerializer):
+    """Базовый ссериализатор дл полей name и slug."""
 
     def validate_name(self, value):
         if len(value) >= NAME_MAX_LENGTH:
@@ -37,26 +33,20 @@ class CategorySerializer(serializers.ModelSerializer):
         return value
 
 
-class GenreSerializer(serializers.ModelSerializer):
+class CategorySerializer(BaseNameSlugSerializer):
+    """Сериализатор категорий."""
+
+    class Meta:
+        model = Category
+        fields = ('name', 'slug')
+
+
+class GenreSerializer(BaseNameSlugSerializer):
     """Сериализатор жанров."""
 
     class Meta:
-        fields = ('name', 'slug')
         model = Genre
-
-    def validate_name(self, value):
-        if len(value) >= NAME_MAX_LENGTH:
-            raise serializers.ValidationError(
-                f'Длина имени больше {NAME_MAX_LENGTH}.'
-            )
-        return value
-
-    def validate_slug(self, value):
-        if len(value) >= SLUG_MAX_LENGTH:
-            raise serializers.ValidationError(
-                f'Длина слага больше {SLUG_MAX_LENGTH}.'
-            )
-        return value
+        fields = ('name', 'slug')
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -83,13 +73,8 @@ class TitleSerializer(serializers.ModelSerializer):
             'category': {'required': False},
         }
 
-    def validate_year(self, value):
-        if value > dt.date.today().year:
-            return serializers.ValidationError('Произведение еще не создано.')
-        return value
 
-
-class TitleCreteUpdateSerializer(serializers.ModelSerializer):
+class TitleCreateUpdateSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         many=True,
         slug_field='slug',
