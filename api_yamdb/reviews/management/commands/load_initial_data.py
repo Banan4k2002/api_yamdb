@@ -104,8 +104,9 @@ class Command(BaseCommand):
 
                 headers_str = f_n.readline().rstrip('\n')
                 headers_list = headers_str.split(',')
-                field_names = [DATA_MAPPING[model][item]
-                               for item in headers_list]
+                field_names = [
+                    DATA_MAPPING[model][item] for item in headers_list
+                ]
 
                 reader = csv.DictReader(f_n, fieldnames=field_names)
                 model.objects.all().delete()

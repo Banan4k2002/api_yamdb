@@ -11,6 +11,7 @@ admin.site.register(User, UserAdmin)
 
 class UserAdmin(admin.ModelAdmin):
     """Custom UserAdmin class"""
+
     list_display = (
         'username',
         'email',
@@ -21,5 +22,5 @@ class UserAdmin(admin.ModelAdmin):
     )
     list_filter = ('username', 'email', 'role')
     search_fields = ('username', 'email', 'role')
-    list_editable = ('role')
+    list_editable = ('role',)
     list_per_page = LIST_PER_PAGE

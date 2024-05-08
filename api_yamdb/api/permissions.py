@@ -1,5 +1,7 @@
 from rest_framework import permissions
+
 from roles.models import UserRole
+
 
 class IsAnonReadOnlyPermission(permissions.BasePermission):
     def has_permission(self, request, view):
