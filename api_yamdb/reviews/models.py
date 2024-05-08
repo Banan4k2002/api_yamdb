@@ -1,7 +1,5 @@
 from django.contrib.auth import get_user_model
-
 from django.core.exceptions import ValidationError
-
 from django.core.validators import (
     MaxValueValidator,
     MinValueValidator
@@ -21,7 +19,8 @@ def title_year_validation(value):
     return value
 
 
-class Dictionary(models.Model):
+
+class BaseNameSlugModel(models.Model):
     name = models.CharField('Название', max_length=NAME_MAX_LENGTH)
     slug = models.SlugField(unique=True, max_length=SLUG_MAX_LENGTH)
 
@@ -29,7 +28,7 @@ class Dictionary(models.Model):
         abstract = True
 
 
-class Category(Dictionary):
+class Category(BaseNameSlugModel):
 
     class Meta:
         verbose_name = 'Категория'
@@ -39,7 +38,8 @@ class Category(Dictionary):
         return self.name
 
 
-class Genre(Dictionary):
+
+class Genre(BaseNameSlugModel):
 
     class Meta:
         verbose_name = 'Жанр'

@@ -44,7 +44,7 @@ from reviews.models import Category, Genre, Review, Title
 User = get_user_model()
 
 
-class DictViewMixin(
+class CreateDestroyListViewSet(
     CreateModelMixin, DestroyModelMixin, ListModelMixin, GenericViewSet
 ):
     """Миксин для жанров и категорий"""
@@ -52,7 +52,7 @@ class DictViewMixin(
     pass
 
 
-class CategoryViewset(DictViewMixin):
+class CategoryViewset(CreateDestroyListViewSet):
     """Вьюсет для категорий."""
 
     queryset = Category.objects.all()
@@ -63,7 +63,7 @@ class CategoryViewset(DictViewMixin):
     permission_classes = (OnlyAdminPostPermissons,)
 
 
-class GenreViewSet(DictViewMixin):
+class GenreViewSet(CreateDestroyListViewSet):
     """Вьюсет для жанров."""
 
     queryset = Genre.objects.all()
