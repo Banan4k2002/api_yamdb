@@ -125,7 +125,7 @@ class UserViewSet(ModelViewSet):
     lookup_field = 'username'
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (AdminPermission,DisablePUTMethod)
+    permission_classes = (AdminPermission, DisablePUTMethod)
     filter_backends = (DjangoFilterBackend, SearchFilter)
     filterset_fields = ['username']
     search_fields = ['username']
@@ -152,6 +152,7 @@ class UserViewSet(ModelViewSet):
     )
     def delete_user(self, request):
         user = request.user
+        user.delete()
 
     @action(
         methods=[

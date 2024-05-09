@@ -1,7 +1,6 @@
 import re
 
 from django.contrib.auth import get_user_model
-from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
 
@@ -106,7 +105,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
             'username',
             'email',
         )
-        
 
     def validate(self, data):
         if data.get('username') == 'me':
