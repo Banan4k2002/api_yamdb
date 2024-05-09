@@ -7,6 +7,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.filters import SearchFilter
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
@@ -102,34 +103,32 @@ def signup(request):
     return Response(data=request.data, status=status.HTTP_200_OK)
 
 
-@api_view(["POST"])
+@api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def get_jwt_token(request):
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
     user = get_object_or_404(
-        User, username=serializer.validated_data["username"]
+        User, username=serializer.validated_data['username']
     )
 
     if default_token_generator.check_token(
-        user, serializer.validated_data["confirmation_code"]
+        user, serializer.validated_data['confirmation_code']
     ):
         token = AccessToken.for_user(user)
-        return Response({"token": str(token)}, status=status.HTTP_201_CREATED)
+        return Response({'token': str(token)}, status=status.HTTP_201_CREATED)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(ModelViewSet):
-    lookup_field = "username"
+    lookup_field = 'username'
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (AdminPermission,)
-
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
+    permission_classes = (AdminPermission,DisablePUTMethod)
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filterset_fields = ['username']
+    search_fields = ['username']
 
     @action(
         methods=[
@@ -153,9 +152,6 @@ class UserViewSet(ModelViewSet):
     )
     def delete_user(self, request):
         user = request.user
-        if request.method == "DELETE":
-            user.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         methods=[
@@ -169,10 +165,10 @@ class UserViewSet(ModelViewSet):
     )
     def users_own_profile(self, request):
         user = request.user
-        if request.method == "GET":
+        if request.method == 'GET':
             serializer = self.get_serializer(user)
             return Response(serializer.data, status=status.HTTP_200_OK)
-        if request.method == "PATCH":
+        if request.method == 'PATCH':
             serializer = self.get_serializer(
                 user,
                 data=request.data,
@@ -183,19 +179,10 @@ class UserViewSet(ModelViewSet):
                 serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
 
-        if request.method == "POST":
-            serializer = RegistrationSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        search_term = request.query_params.get('search')
-        if search_term:
-            queryset = queryset.filter(username__icontains=search_term)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
