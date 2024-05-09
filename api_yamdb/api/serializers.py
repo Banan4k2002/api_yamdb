@@ -1,7 +1,6 @@
 import re
 
 from django.contrib.auth import get_user_model
-from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
 
@@ -110,11 +109,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data.get('username') == 'me':
             raise serializers.ValidationError('Использовать имя me запрещено')
-        if User.objects.filter(username=data.get('username')):
+        if User.objects.filter(username=data.get('username')).exists():
             raise serializers.ValidationError(
                 'Пользователь с такой фамилией уже существует'
             )
-        if User.objects.filter(email=data.get('email')):
+        if User.objects.filter(email=data.get('email')).exists():
             raise serializers.ValidationError(
                 'Пользователь с таким email уже существует'
             )
@@ -139,11 +138,6 @@ class UserSerializer(serializers.ModelSerializer):
             'bio',
             'role',
         )
-
-    def validate_username(self, username):
-        if username in 'me':
-            raise serializers.ValidationError('Имя me запрещено')
-        return username
 
 
 class ReviewSerializer(serializers.ModelSerializer):
