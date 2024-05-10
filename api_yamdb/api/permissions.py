@@ -1,4 +1,7 @@
 from rest_framework import permissions
+from rest_framework.exceptions import MethodNotAllowed
+
+from roles.models import UserRole
 
 
 class IsAnonReadOnlyPermission(permissions.BasePermission):
@@ -29,6 +32,13 @@ class ModeratorPermission(AuthenticatedPermission):
         )
 
 
+class DisablePUTMethod(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method == 'PUT':
+            raise MethodNotAllowed(request.method)
+        return super().has_object_permission(request, view, obj)
+
+
 class OnlyAdminPostPermissons(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.user.is_anonymous:
@@ -36,7 +46,7 @@ class OnlyAdminPostPermissons(permissions.BasePermission):
         else:
             return (
                 request.method in permissions.SAFE_METHODS
-                or request.user.role == 'admin'
+                or request.user.role == UserRole.ADMIN
                 or request.user.is_superuser
             )
 
