@@ -15,13 +15,10 @@ from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Review, Title
 
 from api.filters import TitleFilter
-from api.mixins import CreateDestroyListViewSet
+from api.mixins import CreateDestroyListViewSet, PublicationPermissionViewSet
 from api.permissions import (
     AdminPermission,
-    AuthorPermission,
     DisablePUTMethod,
-    IsAnonReadOnlyPermission,
-    ModeratorPermission,
     OnlyAdminPostPermissons,
 )
 from api.serializers import (
@@ -195,14 +192,8 @@ class UserViewSet(ModelViewSet):
         return Response({'results': serializer.data})
 
 
-class ReviewViewSet(ModelViewSet):
+class ReviewViewSet(PublicationPermissionViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (AuthorPermission,)
-
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
 
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -210,24 +201,9 @@ class ReviewViewSet(ModelViewSet):
     def get_queryset(self):
         return self.get_title().reviews.all()
 
-    def get_permissions(self):
-        if self.request.user.is_anonymous:
-            return (IsAnonReadOnlyPermission(),)
-        elif self.request.user.is_moderator:
-            return (ModeratorPermission(),)
-        elif self.request.user.is_admin:
-            return (AdminPermission(),)
-        return super().get_permissions()
 
-
-class CommentViewSet(ModelViewSet):
+class CommentViewSet(PublicationPermissionViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (AuthorPermission,)
-
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
 
     def get_review(self):
         return get_object_or_404(
@@ -241,12 +217,3 @@ class CommentViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(review=self.get_review(), author=self.request.user)
-
-    def get_permissions(self):
-        if self.request.user.is_anonymous:
-            return (IsAnonReadOnlyPermission(),)
-        elif self.request.user.is_moderator:
-            return (ModeratorPermission(),)
-        elif self.request.user.is_admin:
-            return (AdminPermission(),)
-        return super().get_permissions()
