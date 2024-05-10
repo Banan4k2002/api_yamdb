@@ -23,7 +23,6 @@ from api.permissions import (
     IsAnonReadOnlyPermission,
     ModeratorPermission,
     OnlyAdminPostPermissons,
-
 )
 from api.serializers import (
     CategorySerializer,
@@ -43,21 +42,27 @@ User = get_user_model()
 
 class CategoryViewset(CreateDestroyListViewSet):
     """Вьюсет для категорий."""
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
 class GenreViewSet(CreateDestroyListViewSet):
     """Вьюсет для жанров."""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
 class TitleViewSet(ModelViewSet):
     """Вьюсет для произведений."""
+
     queryset = Title.objects.all()
     filter_backends = (DjangoFilterBackend,)
-    permission_classes = (DisablePUTMethod, OnlyAdminPostPermissons, )
+    permission_classes = (
+        DisablePUTMethod,
+        OnlyAdminPostPermissons,
+    )
     filterset_class = TitleFilter
 
     def get_serializer_class(self):
@@ -82,17 +87,15 @@ class TitleViewSet(ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(["POST"])
+@api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def signup(request):
-    if not User.objects.filter(
-        username=request.data.get('username', None),
-        email=request.data.get('email', None),
-    ).first():
-        serializer = RegistrationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-    user = get_object_or_404(User, username=request.data['username'])
+    serializer = RegistrationSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    user, _ = User.objects.get_or_create(
+        username=serializer.validated_data['username'],
+        email=serializer.validated_data['email'],
+    )
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         subject="Registration",
@@ -100,7 +103,7 @@ def signup(request):
         from_email=None,
         recipient_list=[user.email],
     )
-    return Response(data=request.data, status=status.HTTP_200_OK)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
