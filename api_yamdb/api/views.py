@@ -2,9 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-
 from django_filters.rest_framework import DjangoFilterBackend
-
 from rest_framework import permissions, status
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import SearchFilter
@@ -12,18 +10,12 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
-from reviews.models import Category, Genre, Review, Title
-
 from api.filters import TitleFilter
-from api.mixins import CreateDestroyListViewSet
+from api.mixins import CreateDestroyListViewSet, PublicationPermissionViewSet
 from api.permissions import (
     AdminPermission,
-    AuthorPermission,
     DisablePUTMethod,
-    IsAnonReadOnlyPermission,
-    ModeratorPermission,
     OnlyAdminPostPermissons,
-
 )
 from api.serializers import (
     CategorySerializer,
@@ -36,28 +28,34 @@ from api.serializers import (
     TokenSerializer,
     UserSerializer,
 )
-
+from reviews.models import Category, Genre, Review, Title
 
 User = get_user_model()
 
 
 class CategoryViewset(CreateDestroyListViewSet):
     """Вьюсет для категорий."""
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
 
 class GenreViewSet(CreateDestroyListViewSet):
     """Вьюсет для жанров."""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
 class TitleViewSet(ModelViewSet):
     """Вьюсет для произведений."""
+
     queryset = Title.objects.all()
     filter_backends = (DjangoFilterBackend,)
-    permission_classes = (DisablePUTMethod, OnlyAdminPostPermissons, )
+    permission_classes = (
+        DisablePUTMethod,
+        OnlyAdminPostPermissons,
+    )
     filterset_class = TitleFilter
 
     def get_serializer_class(self):
@@ -82,17 +80,15 @@ class TitleViewSet(ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(["POST"])
+@api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def signup(request):
-    if not User.objects.filter(
-        username=request.data.get('username', None),
-        email=request.data.get('email', None),
-    ).first():
-        serializer = RegistrationSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-    user = get_object_or_404(User, username=request.data['username'])
+    serializer = RegistrationSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    user, _ = User.objects.get_or_create(
+        username=serializer.validated_data['username'],
+        email=serializer.validated_data['email'],
+    )
     confirmation_code = default_token_generator.make_token(user)
     send_mail(
         subject="Registration",
@@ -100,7 +96,7 @@ def signup(request):
         from_email=None,
         recipient_list=[user.email],
     )
-    return Response(data=request.data, status=status.HTTP_200_OK)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -192,14 +188,8 @@ class UserViewSet(ModelViewSet):
         return Response({'results': serializer.data})
 
 
-class ReviewViewSet(ModelViewSet):
+class ReviewViewSet(PublicationPermissionViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (AuthorPermission,)
-
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
 
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs.get('title_id'))
@@ -207,24 +197,9 @@ class ReviewViewSet(ModelViewSet):
     def get_queryset(self):
         return self.get_title().reviews.all()
 
-    def get_permissions(self):
-        if self.request.user.is_anonymous:
-            return (IsAnonReadOnlyPermission(),)
-        elif self.request.user.is_moderator:
-            return (ModeratorPermission(),)
-        elif self.request.user.is_admin:
-            return (AdminPermission(),)
-        return super().get_permissions()
 
-
-class CommentViewSet(ModelViewSet):
+class CommentViewSet(PublicationPermissionViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (AuthorPermission,)
-
-    def update(self, request, *args, **kwargs):
-        if request.method == 'PUT':
-            return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
 
     def get_review(self):
         return get_object_or_404(
@@ -238,12 +213,3 @@ class CommentViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(review=self.get_review(), author=self.request.user)
-
-    def get_permissions(self):
-        if self.request.user.is_anonymous:
-            return (IsAnonReadOnlyPermission(),)
-        elif self.request.user.is_moderator:
-            return (ModeratorPermission(),)
-        elif self.request.user.is_admin:
-            return (AdminPermission(),)
-        return super().get_permissions()
