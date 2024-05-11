@@ -50,7 +50,7 @@ class GenreViewSet(CreateDestroyListViewSet):
 class TitleViewSet(ModelViewSet):
     """Вьюсет для произведений."""
 
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().prefetch_related('reviews')
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     permission_classes = (
@@ -73,7 +73,6 @@ class TitleViewSet(ModelViewSet):
         obj = serializer.save()
         serializer = TitleSerializer(obj)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
 
 @api_view(['POST'])
