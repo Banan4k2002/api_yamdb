@@ -70,9 +70,7 @@ class TitleViewSet(ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def perform_partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
+    def perform_update(self, serializer):
         if serializer.is_valid():
             obj = serializer.save()
             serializer = TitleSerializer(obj)

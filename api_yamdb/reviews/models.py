@@ -1,19 +1,11 @@
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.utils import timezone
 
 from reviews.constants import NAME_MAX_LENGTH, SLUG_MAX_LENGTH
+from reviews.validators import title_year_validation
 
 User = get_user_model()
-
-
-def title_year_validation(value):
-    """Функция валидации года."""
-    if value > timezone.now().year:
-        raise ValidationError('Год не может быть больше текущего.')
-    return value
 
 
 class BaseNameSlugModel(models.Model):
@@ -46,7 +38,7 @@ class Genre(BaseNameSlugModel):
 
 class Title(models.Model):
     name = models.CharField('Название', max_length=NAME_MAX_LENGTH)
-    year = models.IntegerField('Год')
+    year = models.IntegerField('Год', validators=[title_year_validation])
     category = models.ForeignKey(
         Category, on_delete=models.SET_NULL, related_name='titles', null=True
     )
@@ -57,9 +49,9 @@ class Title(models.Model):
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 
-    def rating(self):
-        data = self.reviews.aggregate(models.Avg('score'))
-        return data.get('score__avg')
+    # def rating(self):
+    #     data = self.reviews.aggregate(models.Avg('score'))
+    #     return data.get('score__avg')
 
     def __str__(self):
         return self.name
