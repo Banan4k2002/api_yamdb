@@ -175,17 +175,10 @@ class UserViewSet(ModelViewSet):
             if 'role' not in request.data:
                 serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response({'results': serializer.data})
+        serializer = RegistrationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ReviewViewSet(PublicationPermissionViewSet):
