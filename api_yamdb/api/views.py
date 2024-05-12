@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
+from django.db.models.functions import Round
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status
@@ -50,7 +52,7 @@ class GenreViewSet(CreateDestroyListViewSet):
 class TitleViewSet(ModelViewSet):
     """Вьюсет для произведений."""
 
-    queryset = Title.objects.all().prefetch_related('reviews')
+    queryset = Title.objects.all()
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     permission_classes = (
@@ -59,6 +61,12 @@ class TitleViewSet(ModelViewSet):
     )
     filterset_class = TitleFilter
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.annotate(
+            rating=Round(Avg('reviews__score')))
+        return queryset
+  
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
             return TitleCreateUpdateSerializer
