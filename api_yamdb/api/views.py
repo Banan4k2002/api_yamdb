@@ -50,7 +50,8 @@ class GenreViewSet(CreateDestroyListViewSet):
 class TitleViewSet(ModelViewSet):
     """Вьюсет для произведений."""
 
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().prefetch_related('reviews')
+    serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     permission_classes = (
         DisablePUTMethod,
@@ -64,20 +65,14 @@ class TitleViewSet(ModelViewSet):
         return TitleSerializer
 
     def perform_create(self, serializer):
-        if serializer.is_valid():
-            obj = serializer.save()
-            serializer = TitleSerializer(obj)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        obj = serializer.save()
+        serializer = TitleSerializer(obj)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def perform_partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
-        if serializer.is_valid():
-            obj = serializer.save()
-            serializer = TitleSerializer(obj)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def perform_update(self, serializer):
+        obj = serializer.save()
+        serializer = TitleSerializer(obj)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -175,17 +170,10 @@ class UserViewSet(ModelViewSet):
             if 'role' not in request.data:
                 serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
-
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response({'results': serializer.data})
+        serializer = RegistrationSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class ReviewViewSet(PublicationPermissionViewSet):
