@@ -1,6 +1,8 @@
 import re
 
 from django.contrib.auth import get_user_model
+from django.db.models import Avg
+
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
 
@@ -53,6 +55,7 @@ class TitleSerializer(serializers.ModelSerializer):
 
     genre = GenreSerializer(many=True, required=False)
     category = CategorySerializer()
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Title
@@ -71,6 +74,10 @@ class TitleSerializer(serializers.ModelSerializer):
             'year': {'required': False},
             'category': {'required': False},
         }
+
+    def get_rating(self, obj):
+        data = obj.reviews.aggregate(Avg('score'))
+        return data.get('score__avg')
 
 
 class TitleCreateUpdateSerializer(serializers.ModelSerializer):
@@ -94,7 +101,6 @@ class TitleCreateUpdateSerializer(serializers.ModelSerializer):
             'description',
             'genre',
             'category',
-            'rating',
         )
 
 

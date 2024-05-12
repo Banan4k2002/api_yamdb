@@ -50,7 +50,8 @@ class GenreViewSet(CreateDestroyListViewSet):
 class TitleViewSet(ModelViewSet):
     """Вьюсет для произведений."""
 
-    queryset = Title.objects.all()
+    queryset = Title.objects.all().prefetch_related('reviews')
+    serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     permission_classes = (
         DisablePUTMethod,
@@ -64,20 +65,14 @@ class TitleViewSet(ModelViewSet):
         return TitleSerializer
 
     def perform_create(self, serializer):
-        if serializer.is_valid():
-            obj = serializer.save()
-            serializer = TitleSerializer(obj)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        obj = serializer.save()
+        serializer = TitleSerializer(obj)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def perform_partial_update(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data)
-        if serializer.is_valid():
-            obj = serializer.save()
-            serializer = TitleSerializer(obj)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def perform_update(self, serializer):
+        obj = serializer.save()
+        serializer = TitleSerializer(obj)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
