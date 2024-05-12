@@ -66,7 +66,7 @@ class TitleViewSet(ModelViewSet):
         queryset = queryset.annotate(
             rating=Round(Avg('reviews__score')))
         return queryset
-  
+
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
             return TitleCreateUpdateSerializer
