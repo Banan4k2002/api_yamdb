@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
+from django.db.models.functions import Round
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status
@@ -50,7 +52,9 @@ class GenreViewSet(CreateDestroyListViewSet):
 class TitleViewSet(ModelViewSet):
     """Вьюсет для произведений."""
 
-    queryset = Title.objects.all().prefetch_related('reviews')
+    queryset = Title.objects.annotate(
+        rating=Round(Avg('reviews__score'))
+    )
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     permission_classes = (
@@ -64,15 +68,22 @@ class TitleViewSet(ModelViewSet):
             return TitleCreateUpdateSerializer
         return TitleSerializer
 
-    def perform_create(self, serializer):
-        obj = serializer.save()
-        serializer = TitleSerializer(obj)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def create(self, request):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            obj = serializer.save()
+            serializer = TitleSerializer(obj)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def perform_update(self, serializer):
-        obj = serializer.save()
-        serializer = TitleSerializer(obj)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data)
+        if serializer.is_valid():
+            obj = serializer.save()
+            serializer = TitleSerializer(obj)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
