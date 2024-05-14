@@ -52,9 +52,7 @@ class GenreViewSet(CreateDestroyListViewSet):
 class TitleViewSet(ModelViewSet):
     """Вьюсет для произведений."""
 
-    queryset = Title.objects.annotate(
-        rating=Round(Avg('reviews__score'))
-    )
+    queryset = Title.objects.annotate(rating=Round(Avg('reviews__score')))
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     permission_classes = (
