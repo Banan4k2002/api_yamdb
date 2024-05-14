@@ -1,6 +1,7 @@
 import re
 
 from django.contrib.auth import get_user_model
+
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
 
@@ -96,6 +97,10 @@ class TitleCreateUpdateSerializer(serializers.ModelSerializer):
             'genre',
             'category',
         )
+
+    def to_representation(self, instance):
+        serializer = TitleSerializer(instance)
+        return serializer.data
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
