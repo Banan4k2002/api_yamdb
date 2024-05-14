@@ -98,6 +98,10 @@ class TitleCreateUpdateSerializer(serializers.ModelSerializer):
             'category',
         )
 
+    def to_representation(self, instance):
+        serializer = TitleSerializer(instance)
+        return serializer.data
+
 
 class RegistrationSerializer(serializers.ModelSerializer):
     username = serializers.RegexField(

@@ -65,19 +65,9 @@ class TitleViewSet(ModelViewSet):
     filterset_class = TitleFilter
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
+        if self.action in ['create', 'partial_update']:
             return TitleCreateUpdateSerializer
         return TitleSerializer
-
-    def perform_create(self, serializer):
-        obj = serializer.save()
-        serializer = TitleSerializer(obj)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    def perform_update(self, serializer):
-        obj = serializer.save()
-        serializer = TitleSerializer(obj)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
